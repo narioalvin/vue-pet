@@ -16,7 +16,7 @@
           v-model="user.name"
           type="text"
           class="custom-input mb-4"
-          placeholder="Please type your name"
+          placeholder="Enter your name"
         />
         <font-awesome-icon class="sign-in-up-icon" :icon="['fas', 'user']" />
       </div>
@@ -27,6 +27,7 @@
           type="password"
           maxlength="4"
           class="custom-input mb-4"
+          @keydown="preventInvalidChars($event)"
           placeholder="Enter 4 digit passcode"
         />
         <font-awesome-icon class="sign-in-up-icon" :icon="['fas', 'key']" />
@@ -42,6 +43,7 @@
 </template>
 
 <script>
+const axios = require('axios');
 import UserService from '../service/UserService';
 import moment from 'moment';
 
@@ -50,6 +52,7 @@ export default {
   props: ['userFromSignUp'],
   data() {
     return {
+      ipDataKey: process.env.VUE_APP_IPDATAKEY,
       user: {
         name: '',
         passcode: '',
@@ -70,28 +73,51 @@ export default {
   methods: {
     signIn() {
       this.loading = true;
+      this.errorMessage = '';
 
-      UserService.signin(this.user).then(
-        (response) => {
-          const user = response.data;
-          user.modificationDate = moment().calendar();
+      axios
+        .get(`https://api.ipdata.co?api-key=${this.ipDataKey}`)
+        .then((response) => {
+          const country = response.data;
 
-          localStorage.setItem('user', JSON.stringify(user));
+          UserService.signin(this.user).then(
+            (response) => {
+              const user = response.data;
 
-          this.$router.push({
-            name: 'Overview',
-            params: { user: user },
-          });
-          this.loading = false;
-        },
-        (error) => {
-          this.errorMessage = error.response.data;
-          this.loading = false;
-        }
-      );
+              user['$$symbol'] = country.currency.symbol;
+              user.modificationDate = moment().calendar();
+
+              localStorage.setItem('user', JSON.stringify(user));
+
+              this.$router.push({
+                name: 'Overview',
+                params: { user: user },
+              });
+              this.loading = false;
+            },
+            (error) => {
+              this.errorMessage = error.response.data;
+              this.loading = false;
+            }
+          );
+        })
+        .catch((error) => console.log(error));
     },
     directToSignUp() {
-      this.$router.push({ name: 'SignUp' });
+      const element = document.querySelector('.content');
+      element.style['-webkit-animation'] = 'animRight .5s forwards';
+      // this.$router.push({ name: 'SignUp' });
+      setTimeout(() => {
+        this.$router.push({ name: 'SignUp' });
+      }, 90);
+    },
+    preventInvalidChars(evt) {
+      if (
+        (evt.which != 8 && evt.which != 0 && evt.which < 48) ||
+        evt.which > 57
+      ) {
+        evt.preventDefault();
+      }
     },
   },
 };
@@ -108,20 +134,10 @@ export default {
     margin-bottom: 20px;
   }
 
-  h5 {
-    color: #ff2e63;
-    font-weight: bold;
-  }
-}
-
-@keyframes animLeft {
-  from {
-    transform: translateX(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  // h5 {
+  //   color: #010a43;
+  //   font-weight: bold;
+  //   font-size: 17px;
+  // }
 }
 </style>

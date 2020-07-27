@@ -61,6 +61,7 @@
           v-model="user.passcode"
           type="password"
           maxlength="4"
+          @keydown="preventInvalidChars($event)"
           class="custom-input mb-4"
           placeholder="4 digit passcode"
         />
@@ -113,15 +114,25 @@ export default {
     };
   },
   created() {},
+  mounted() {
+    const element = document.querySelector('.content');
+    element.style['-webkit-animation'] = 'animLeft .5s';
+  },
   methods: {
     signUp() {
       this.loading = true;
+      this.errorMessage = '';
 
       UserService.signup(this.user).then(
         () => {
           this.$router.push({
             name: 'SignIn',
-            params: { userFromSignUp: this.user },
+            params: {
+              userFromSignUp: {
+                name: this.user.name,
+                passcode: this.user.passcode,
+              },
+            },
           });
           this.loading = false;
         },
@@ -137,6 +148,14 @@ export default {
     },
     directToSignIn() {
       this.$router.push({ name: 'SignIn' });
+    },
+    preventInvalidChars(evt) {
+      if (
+        (evt.which != 8 && evt.which != 0 && evt.which < 48) ||
+        evt.which > 57
+      ) {
+        evt.preventDefault();
+      }
     },
   },
 };

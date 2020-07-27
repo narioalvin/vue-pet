@@ -10,22 +10,32 @@
       <form ref="form">
         <b-form-group label="Type">
           <div class="radio-btns">
-            <b-form-radio v-model="transaction.type" value="income"
+            <b-form-radio
+              v-model="transaction.type"
+              value="income"
+              @change="
+                options = incomeOptions;
+                selectedCategory = null;
+              "
               >Income</b-form-radio
             >
             <b-form-radio
               v-model="transaction.type"
               value="expense"
-              :disabled="income === 0"
+              @change="
+                options = expenseOptions;
+                selectedCategory = null;
+              "
+              :disabled="balance === 0"
               >Expense</b-form-radio
             >
           </div>
-          <p class="reminder" v-if="income === 0">
-            Please add your income first
+          <p class="reminder" v-if="balance === 0">
+            Your current balance is {{ currentUser.$$symbol }}0
           </p>
         </b-form-group>
 
-        <b-form-group
+        <!-- <b-form-group
           label="Category"
           label-for="category"
           v-if="transaction.type === 'income'"
@@ -34,15 +44,18 @@
             v-model="transaction.category"
             placeholder="Ex: Payment"
           ></b-form-input>
-        </b-form-group>
+        </b-form-group> -->
 
-        <b-form-group v-else>
+        <b-form-group>
           <label
             >Category
             <b-button class="tooltip-btn" id="tooltip-target-1">
               <font-awesome-icon
                 class="pencil"
-                @click="customCategory = !customCategory"
+                @click="
+                  customCategory = !customCategory;
+                  transaction.category = '';
+                "
                 :icon="['fas', !customCategory ? 'pencil-alt' : 'sync-alt']"
               />
             </b-button>
@@ -52,16 +65,72 @@
               <span v-else>Choose category</span>
             </b-tooltip>
           </label>
-          <b-form-select
+          <b-dropdown
+            ref="category-ddown"
+            v-if="!customCategory"
+            :text="
+              transaction.category === ''
+                ? 'Select Category'
+                : transaction.category
+            "
+            block
+            menu-class="w-100"
+            class="category-ddown"
+          >
+            <template v-slot:button-content>
+              <span v-if="selectedCategory === null">Select Category</span>
+              <span v-else
+                ><font-awesome-icon
+                  class="mr-1"
+                  :icon="['fas', selectedCategory.icon]"
+                />
+                {{ selectedCategory.value }}</span
+              >
+            </template>
+
+            <b-dropdown-form>
+              <div
+                v-for="(item, index) in options"
+                :key="index"
+                @click="selectCategory(item)"
+              >
+                <div class="dd-icons" :class="item.icon">
+                  <font-awesome-icon :icon="['fas', item.icon]" />
+                </div>
+
+                {{ item.value }}
+              </div>
+            </b-dropdown-form>
+            <!-- <b-dropdown-item
+              href="#"
+              v-for="(item, index) in options"
+              :key="index"
+              @click="selectCategory(item)"
+            >
+              <div class="dd-icons" :class="item.icon">
+                <font-awesome-icon :icon="['fas', item.icon]" />
+              </div>
+
+              {{ item.value }}</b-dropdown-item
+            > -->
+          </b-dropdown>
+          <b-form-input
+            v-else
+            v-model="transaction.category"
+            placeholder="Enter custom category name"
+            autocomplete="off"
+          ></b-form-input>
+          <!-- <b-form-select
             v-model="transaction.category"
             v-if="!customCategory"
             :options="options"
-          ></b-form-select>
+          >
+          </b-form-select>
           <b-form-input
             v-else
             v-model="transaction.category"
             placeholder="Ex: Payment"
-          ></b-form-input>
+          ></b-form-input> -->
         </b-form-group>
 
         <b-form-group label="Amount" label-for="amount" class="mb-5">
@@ -71,6 +140,7 @@
             @keydown="preventInvalidChars($event)"
             id="amount"
             placeholder="Enter amount"
+            autocomplete="off"
           ></b-form-input>
         </b-form-group>
 
@@ -104,7 +174,7 @@
             class="submit"
             @click="handleSubmit"
             >Add<b-spinner
-              class="action-spinner"
+              class="modal-spinner"
               v-if="actionLoading"
             ></b-spinner
           ></b-button>
@@ -112,7 +182,7 @@
       </form>
     </b-modal>
 
-    <div class="content" v-if="country !== null">
+    <div class="content">
       <header>
         <div class="welcome">
           <div class="name">
@@ -128,20 +198,32 @@
             alt=""
             id="popover-dropdown"
           />
-          <!-- <font-awesome-icon :icon="['fas', 'chevron-circle-down']" /> -->
+          <font-awesome-icon :icon="['fas', 'caret-down']" />
 
           <b-popover
             target="popover-dropdown"
             placement="bottom"
-            triggers="click"
+            triggers="hover click"
             custom-class="pop-dropdown"
-            >
-            <ul>
-              <li><button class="btn-link">Reset Data</button></li>
-              <li><button @click="signOut()" class="btn-link">Sign Out</button></li>
-            </ul>
-            </b-popover
+            ref="user-ddown"
           >
+            <ul>
+              <li>
+                <button class="btn-link" @click="hidePopover('user-ddown')">
+                  <font-awesome-icon :icon="['fas', 'sync-alt']" /><span
+                    >RESET DATA</span
+                  >
+                </button>
+              </li>
+              <li>
+                <button @click="signOut()" class="btn-link">
+                  <font-awesome-icon :icon="['fas', 'power-off']" /><span
+                    >SIGN OUT</span
+                  >
+                </button>
+              </li>
+            </ul>
+          </b-popover>
         </div>
         <!-- <b-button class="tooltip-btn" id="tooltip-signout">
           <font-awesome-icon
@@ -165,7 +247,7 @@
             <div class="balance">
               <h4>BALANCE</h4>
               <span
-                >{{ country.currency.symbol }}
+                >{{ currentUser.$$symbol }}
                 {{ balance.toLocaleString() }}</span
               >
             </div>
@@ -175,7 +257,7 @@
                   TOTAL INCOME
                 </h4>
                 <span
-                  >{{ country.currency.symbol }}
+                  >{{ currentUser.$$symbol }}
                   {{ income.toLocaleString() }}</span
                 >
               </div>
@@ -183,7 +265,7 @@
               <div class="expense">
                 <h4>EXPENSE</h4>
                 <span
-                  >{{ country.currency.symbol }}
+                  >{{ currentUser.$$symbol }}
                   {{ expense.toLocaleString() }}</span
                 >
               </div>
@@ -192,7 +274,7 @@
         </section>
         <section class="right">
           <div class="right-header">
-            <h2>Transcation</h2>
+            <h2>Transactions</h2>
             <button v-b-modal.add-transaction>
               <font-awesome-icon class="icon" :icon="['fas', 'plus']" />
             </button>
@@ -228,7 +310,7 @@
             </div>
 
             <p>
-              {{ country.currency.symbol }}{{ item.amount.toLocaleString() }}
+              {{ currentUser.$$symbol }}{{ item.amount.toLocaleString() }}
             </p>
 
             <b-popover
@@ -253,7 +335,6 @@
       id="delete-transaction"
       ref="delete-transaction"
       title="Delete Transaction"
-      centered
       hide-footer
     >
       <h4 class="mb-5 mt-3">Are you sure you want to delete this?</h4>
@@ -267,20 +348,42 @@
         >
         <b-button class="submit" @click="handleDelete"
           >Delete<b-spinner
-            class="action-spinner"
+            class="modal-spinner"
             v-if="actionLoading"
           ></b-spinner
         ></b-button>
       </div>
     </b-modal>
+
+    <b-modal ref="reset-data" title="Reset Data" id="reset-data" hide-footer>
+      <h4 class="my-4 mb-5">Are you sure you want reset your data?</h4>
+
+      <div class="submit-btns">
+        <b-button
+          class="cancel"
+          variant="light"
+          @click="hideModal('reset-modal')"
+          >Cancel</b-button
+        >
+        <b-button class="submit" @click="resetData"
+          >Reset<b-spinner
+            class="modal-spinner"
+            v-if="actionLoading"
+          ></b-spinner
+        ></b-button>
+      </div>
+    </b-modal>
+
+    <!-- <ResetDataModal ref="ResetDataModal" /> -->
   </div>
 </template>
 
 <script>
-const axios = require('axios');
+// const axios = require('axios');
 import TransactionService from '../service/TransactionService';
 import moment from 'moment';
 import UserService from '../service/UserService';
+// import ResetDataModal from './modal/ResetDataModal';
 
 export default {
   name: 'Overview',
@@ -288,7 +391,6 @@ export default {
   data() {
     return {
       ipDataKey: process.env.VUE_APP_IPDATAKEY,
-      country: null,
       customCategory: false,
       currentUser: JSON.parse(localStorage.getItem('user')) || {},
       transaction: {
@@ -302,31 +404,43 @@ export default {
       income: 0,
       expense: 0,
       balance: 0,
-      options: [
-        { value: '', text: 'Select category' },
-        { value: 'payment', text: 'Payment' },
-        { value: 'car', text: 'Car' },
-        { value: 'food', text: 'Food' },
-        { value: 'house', text: 'House' },
-        { value: 'pets', text: 'Pets' },
-        { value: 'grocery', text: 'Grocery' },
-        { value: 'drinks', text: 'Drinks' },
-        { value: 'travel', text: 'Tavel' },
+      options: [],
+      incomeOptions: [
+        { value: 'salary', icon: 'wallet' },
+        { value: 'sales', icon: 'tags' },
+        { value: 'rewards', icon: 'hand-holding-usd' },
+        { value: 'lottery', icon: 'dice-four' },
+        { value: 'allowance', icon: 'money-bill-alt' },
+        { value: 'coupons', icon: 'receipt' },
+        { value: 'others', icon: 'random' },
       ],
-      icons: [
+      expenseOptions: [
         { value: 'payment', icon: 'money-check' },
         { value: 'car', icon: 'car' },
         { value: 'food', icon: 'pizza-slice' },
         { value: 'house', icon: 'home' },
         { value: 'pets', icon: 'dog' },
         { value: 'grocery', icon: 'shopping-cart' },
-        { value: 'drinks', icon: 'mug-hot' },
-        { value: 'travel', icon: 'map-marker-alt' },
+        { value: 'coffee', icon: 'mug-hot' },
+        { value: 'travel', icon: 'plane' },
+        { value: 'investment', icon: 'chart-line' },
+        { value: 'alcohol', icon: 'beer' },
+        { value: 'personal', icon: 'user-tag' },
+        { value: 'shopping', icon: 'shopping-bag' },
+        { value: 'clothing', icon: 'tshirt' },
+        { value: 'medical', icon: 'briefcase-medical' },
+        { value: 'gifts', icon: 'gift' },
+        { value: 'insurance', icon: 'chart-bar' },
+        { value: 'gadgets', icon: 'mobile-alt' },
+        { value: 'loans', icon: 'credit-card' },
+        { value: 'education', icon: 'graduation-cap' },
+        { value: 'others', icon: 'random' },
       ],
       transactionLoading: true,
       actionLoading: false,
       itemToDelete: null,
       isTabOrMobile: false,
+      selectedCategory: null,
     };
   },
   beforeRouteEnter(to, from, next) {
@@ -336,9 +450,10 @@ export default {
   },
   created() {
     // this.getCountry();
+    this.options = this.incomeOptions;
     this.isTabOrMobile = window.innerWidth < 768;
 
-    this.country = JSON.parse(localStorage.getItem('country')) || [];
+    // this.country = JSON.parse(localStorage.getItem('country')) || [];
     this.getTransactions();
   },
   methods: {
@@ -376,15 +491,22 @@ export default {
         });
 
         this.transactionLoading = false;
+        this.options = this.incomeOptions;
 
         this.updateUserModificationDate();
 
         this.resetModals();
       });
     },
+    selectCategory(item) {
+      this.transaction.category = item.value;
+      this.selectedCategory = item;
+      this.$refs['category-ddown'].hide();
+    },
     resetModals() {
       this.$refs['delete-transaction'].hide();
       this.$refs['add-modal'].hide();
+      this.$refs['reset-data'].hide();
 
       this.transaction = {
         type: 'income',
@@ -393,26 +515,30 @@ export default {
         icon: '',
       };
 
+      this.selectedCategory = null;
+      this.customCategory = false;
       this.actionLoading = false;
     },
-    getCountry() {
-      axios
-        .get(`https://api.ipdata.co?api-key=${this.ipDataKey}`)
-        .then((response) => {
-          this.country = response.data;
-          // localStorage.setItem('country', JSON.stringify(this.country));
-        })
-        .catch((error) => console.log(error));
-    },
+    // getCountry() {
+    //   axios
+    //     .get(`https://api.ipdata.co?api-key=${this.ipDataKey}`)
+    //     .then((response) => {
+    //       this.country = response.data;
+    //       // localStorage.setItem('country', JSON.stringify(this.country));
+    //     })
+    //     .catch((error) => console.log(error));
+    // },
     handleSubmit() {
       this.actionLoading = true;
 
       const item =
-        this.transaction.type === 'income'
+        this.transaction.type === 'income' && this.customCategory
           ? { icon: 'coins' }
-          : this.customCategory
+          : this.transaction.type === 'expense' && this.customCategory
           ? { icon: 'money-bill' }
-          : this.icons.find((icon) => icon.value === this.transaction.category);
+          : this.options.find(
+              (icon) => icon.value === this.transaction.category
+            );
 
       this.transaction.icon = item.icon;
       this.transaction.userId = this.currentUser.id;
@@ -436,14 +562,6 @@ export default {
         },
         (error) => console.log(error)
       );
-
-      // TransactionService.deleteAll().then(
-      //   () => {
-      //     this.getTransactions();
-      //     this.$refs['delete-transaction'].hide();
-      //   },
-      //   (error) => console.log(error)
-      // );
     },
     updateUserModificationDate() {
       UserService.update(this.currentUser.id).then(() => (error) =>
@@ -462,10 +580,31 @@ export default {
       localStorage.clear();
       this.$router.push({ name: 'SignIn' });
     },
+    resetData() {
+      this.actionLoading = true;
+      
+      TransactionService.reset(this.currentUser.id).then(
+        () => {
+          this.getTransactions();
+        },
+        (error) => console.log(error)
+      );
+    },
+    // optionsState() {
+    //   this.options =
+    //     this.transaction.type === 'income'
+    //       ? this.incomeOptions
+    //       : this.expenseOptions;
 
+    //       console.log(this.transaction.type, this.options)
+    // },
     hideModal(modal) {
       this.$refs[modal].hide();
     },
+    hidePopover(popover) {
+      this.$refs[popover].$emit('close');
+      this.$refs['reset-data'].show();
+    }
   },
 };
 </script>
@@ -536,6 +675,8 @@ h4 {
     }
 
     .avatar {
+      position: relative;
+
       img {
         width: 65px;
         // border: 3px solid #ffb129;
@@ -547,12 +688,12 @@ h4 {
         }
       }
 
-      // svg {
-      //   position: relative;
-      //   top: 33px;
-      //   right: 20px;
-      //   color: #ff2e63;
-      // }
+      svg {
+        position: relative;
+        top: 42px;
+        right: 38px;
+        font-size: 16px;
+      }
     }
 
     h1 {
@@ -732,45 +873,45 @@ h4 {
           }
         }
 
-        .money-check {
-          background: #302387;
-        }
+        // .money-check {
+        //   background: #302387;
+        // }
 
-        .car {
-          background: #323edd;
-        }
+        // .car {
+        //   background: #323edd;
+        // }
 
-        .pizza-slice {
-          background: #ffd31d;
-        }
+        // .pizza-slice {
+        //   background: #ffd31d;
+        // }
 
-        .home {
-          background: #8105d8;
-        }
+        // .home {
+        //   background: #8105d8;
+        // }
 
-        .dog {
-          background: #0fabbc;
-        }
+        // .dog {
+        //   background: #0fabbc;
+        // }
 
-        .shopping-cart {
-          background: #e36387;
-        }
+        // .shopping-cart {
+        //   background: #e36387;
+        // }
 
-        .mug-hot {
-          background: #df7861;
-        }
+        // .mug-hot {
+        //   background: #df7861;
+        // }
 
-        .map-marker-alt {
-          background: #3e64ff;
-        }
+        // .map-marker-alt {
+        //   background: #3e64ff;
+        // }
 
-        .coins {
-          background: #01cc88;
-        }
+        // .coins {
+        //   background: #01cc88;
+        // }
 
-        .money-bill {
-          background: #fa163f;
-        }
+        // .money-bill {
+        //   background: #fa163f;
+        // }
       }
     }
   }
@@ -819,34 +960,9 @@ h4 {
 
 .reminder {
   margin-top: 10px;
-  font-style: italic;
   color: #ff2e63;
   font-size: 14px;
   font-weight: bold;
-}
-
-.submit-btns {
-  text-align: right;
-
-  button {
-    min-width: 110px;
-    border-radius: 25px;
-  }
-
-  .cancel {
-    margin-right: 10px;
-    border: 1px solid #bfbfbf;
-  }
-
-  .submit {
-    background: #ff2e63;
-    border: 1px solid #ff2e63;
-
-    &:hover {
-      background: #ff1a53;
-      border: 1px solid #ff1a53;
-    }
-  }
 }
 
 @media (min-width: 768px) {
