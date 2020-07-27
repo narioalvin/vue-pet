@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const url = 'https://p-expense-tracker.herokuapp.com/api/transaction/';
-const url = 'http://localhost:5000/api/transaction/';
+const url = 'https://p-expense-tracker.herokuapp.com/api/transaction/';
+// const url = 'http://localhost:5000/api/transaction/';
 
 class TransactionService {
   static create(value) {
@@ -18,8 +18,8 @@ class TransactionService {
     return axios.delete(`${url}${id}`);
   }
 
-  static deleteAll() {
-    return axios.delete(`${url}deleteAll`);
+  static reset(userId) {
+    return axios.delete(`${url}reset/${userId}`);
   }
 }
 

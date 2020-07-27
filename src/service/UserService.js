@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const url = 'https://p-expense-tracker.herokuapp.com/api/user/';
-const url = 'http://localhost:5000/api/user/'
+const url = 'https://p-expense-tracker.herokuapp.com/api/user/';
+// const url = 'http://localhost:5000/api/user/'
 
 class UserService {
   static signup(user) {
