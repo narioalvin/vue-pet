@@ -21,6 +21,94 @@ button {
   }
 }
 
+.money-check, .wallet {
+  background: #302387 !important;
+}
+
+.car {
+  background: #323edd !important;
+}
+
+.pizza-slice {
+  background: #ffd31d !important;
+}
+
+.home {
+  background: #8105d8 !important;
+}
+
+.dog, .receipt {
+  background: #0fabbc !important;
+}
+
+.shopping-cart {
+  background: #a6cb12 !important;
+}
+
+.mug-hot {
+  background: #df7861 !important;
+}
+
+.plane {
+  background: #3e64ff !important;
+}
+
+.coins {
+  background: #01cc88 !important;
+}
+
+.money-bill {
+  background: #fa163f !important;
+}
+
+.chart-line {
+  background: #fa26a0 !important;
+}
+
+.beer {
+  background: #f7931e !important;
+}
+
+.user-tag {
+  background: #472b62 !important;
+}
+
+.shopping-bag, .tags {
+  background: #ff3e6d !important;
+}
+
+.tshirt, .money-bill-alt {
+  background: #b643cd !important;
+}
+
+.briefcase-medical, .dice-four {
+  background: #ff1f5a !important;
+}
+
+.gift {
+  background: #291f71 !important;
+}
+
+.chart-bar, .hand-holding-usd {
+  background: #e7455f !important;
+}
+
+.mobile-alt {
+  background: #0d3f67 !important;
+}
+
+.credit-card {
+  background: #8105d8 !important;
+}
+
+.graduation-cap {
+  background: #f68787 !important;
+}
+
+.random {
+  background: #588da8 !important;
+}
+
 .pop-dropdown .popover-body ul {
   margin-bottom: 0;
 
@@ -29,7 +117,21 @@ button {
       border-bottom: 1px solid #f2f2f2;
 
       button {
-        margin-bottom: 2px;
+        margin-bottom: 3px;
+      }
+    }
+
+    button {
+      color: #202020;
+
+      svg {
+        color: #202020;
+        font-size: 14px;
+      }
+
+      span {
+        font-size: 14px;
+        margin-left: 10px;
       }
     }
   }
@@ -50,7 +152,6 @@ button {
   width: 18px;
   height: 18px;
   position: absolute;
-  /* left: 18px; */
   right: 8%;
   top: 35%;
 }
@@ -95,6 +196,7 @@ button {
     background: #ffffff;
     padding: 50px 15px;
     border-radius: 15px;
+    @include flex(normal, center, column);
 
     .error {
       color: #fa163f;
@@ -161,6 +263,12 @@ button {
         top: 2px;
       }
     }
+
+    h5 {
+      color: #010a43;
+      font-weight: bold;
+      font-size: 17px;
+    }
   }
 }
 
@@ -198,7 +306,7 @@ button {
 
 @media (min-width: 1200px) {
   .sign-in-up .content {
-    width: 35%;
+    width: 33%;
 
     // .sign-in-up-header h1 {
     //   font-size: 36px;
