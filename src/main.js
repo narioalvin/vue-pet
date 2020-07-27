@@ -15,7 +15,10 @@ import {
   BTooltip,
   BFormRadio,
   BPopover,
-  BSpinner
+  BSpinner,
+  BDropdown,
+  BDropdownItem,
+  BDropdownForm
 } from 'bootstrap-vue';
 
 library.add(fas);
@@ -31,6 +34,9 @@ Vue.component('b-tooltip', BTooltip)
 Vue.component('b-form-radio', BFormRadio)
 Vue.component('b-popover', BPopover)
 Vue.component('b-spinner', BSpinner)
+Vue.component('b-dropdown', BDropdown)
+Vue.component('b-dropdown-item', BDropdownItem)
+Vue.component('b-dropdown-form', BDropdownForm)
 
 Vue.config.productionTip = false;
 

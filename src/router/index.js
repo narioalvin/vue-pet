@@ -13,7 +13,7 @@ const routes = [
     name: 'SignIn',
     component: SignIn,
     props: true,
-    meta: { title: 'SignIn - Personal Expense Tracker' },
+    meta: { title: 'Sign In - Personal Expense Tracker' },
   },
   {
     path: '/signup',
