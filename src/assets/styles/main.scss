@@ -21,7 +21,8 @@ button {
   }
 }
 
-.money-check, .wallet {
+.money-check,
+.wallet {
   background: #302387 !important;
 }
 
@@ -37,7 +38,8 @@ button {
   background: #8105d8 !important;
 }
 
-.dog, .receipt {
+.dog,
+.receipt {
   background: #0fabbc !important;
 }
 
@@ -73,15 +75,18 @@ button {
   background: #472b62 !important;
 }
 
-.shopping-bag, .tags {
+.shopping-bag,
+.tags {
   background: #ff3e6d !important;
 }
 
-.tshirt, .money-bill-alt {
+.tshirt,
+.money-bill-alt {
   background: #b643cd !important;
 }
 
-.briefcase-medical, .dice-four {
+.briefcase-medical,
+.dice-four {
   background: #ff1f5a !important;
 }
 
@@ -89,7 +94,8 @@ button {
   background: #291f71 !important;
 }
 
-.chart-bar, .hand-holding-usd {
+.chart-bar,
+.hand-holding-usd {
   background: #e7455f !important;
 }
 
@@ -161,34 +167,7 @@ button {
   height: 100vh;
   @include flex(center, space-evenly, column);
   padding: 15px;
-
   background: $main;
-
-  // .avatar {
-  //   @include flex(center, center, column);
-
-  //   .circle {
-  //     height: 70px;
-  //     width: 70px;
-  //     border: 2px solid #bfbfbf;
-  //     border-radius: 50%;
-  //     @include flex(center, center, column);
-
-  //     .selected-avatar {
-  //       width: 70px;
-  //       position: absolute;
-  //     }
-
-  //     svg {
-  //       cursor: pointer;
-  //       font-size: 20px;
-  //     }
-  //   }
-
-  //   h5 {
-  //     margin: 20px 0 0 0;
-  //   }
-  // }
 
   .content {
     width: 100%;
@@ -298,24 +277,11 @@ button {
   .sign-in-up .content {
     width: 55%;
   }
-
-  // .btn-link {
-  //   font-size: 18px;
-  // }
 }
 
 @media (min-width: 1200px) {
   .sign-in-up .content {
     width: 33%;
-
-    // .sign-in-up-header h1 {
-    //   font-size: 36px;
-    // }
-
-    // input {
-    //   font-size: 20px;
-    //   height: 60px;
-    // }
   }
 }
 

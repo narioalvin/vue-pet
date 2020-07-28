@@ -1,151 +1,5 @@
 <template>
   <div class="main">
-    <b-modal
-      id="add-transaction"
-      class="transaction-modal"
-      title="Add Transaction"
-      ref="add-modal"
-      hide-footer
-    >
-      <form ref="form">
-        <b-form-group label="Type">
-          <div class="radio-btns">
-            <b-form-radio
-              v-model="transaction.type"
-              value="income"
-              @change="
-                options = incomeOptions;
-                selectedCategory = null;
-              "
-              >Income</b-form-radio
-            >
-            <b-form-radio
-              v-model="transaction.type"
-              value="expense"
-              @change="
-                options = expenseOptions;
-                selectedCategory = null;
-              "
-              :disabled="balance === 0"
-              >Expense</b-form-radio
-            >
-          </div>
-          <p class="reminder" v-if="balance === 0">
-            Your current balance is {{ currentUser.$$symbol }}0
-          </p>
-        </b-form-group>
-
-        <b-form-group>
-          <label>
-            Category
-            <b-button class="tooltip-btn" id="tooltip-target-1">
-              <font-awesome-icon
-                class="pencil"
-                @click="
-                  customCategory = !customCategory;
-                  transaction.category = '';
-                "
-                :icon="['fas', !customCategory ? 'pencil-alt' : 'sync-alt']"
-              />
-            </b-button>
-
-            <b-tooltip target="tooltip-target-1" triggers="hover">
-              <span v-if="!customCategory">Type custom category</span>
-              <span v-else>Choose category</span>
-            </b-tooltip>
-          </label>
-          <b-dropdown
-            ref="category-ddown"
-            v-if="!customCategory"
-            :text="
-              transaction.category === ''
-                ? 'Select Category'
-                : transaction.category
-            "
-            block
-            menu-class="w-100"
-            class="category-ddown"
-          >
-            <template v-slot:button-content>
-              <span v-if="selectedCategory === null">Select Category</span>
-              <span v-else>
-                <font-awesome-icon
-                  class="mr-1"
-                  :icon="['fas', selectedCategory.icon]"
-                />
-                {{ selectedCategory.value }}
-              </span>
-            </template>
-
-            <b-dropdown-form>
-              <div
-                v-for="(item, index) in options"
-                :key="index"
-                @click="selectCategory(item)"
-              >
-                <div class="dd-icons" :class="item.icon">
-                  <font-awesome-icon :icon="['fas', item.icon]" />
-                </div>
-                {{ item.value }}
-              </div>
-            </b-dropdown-form>
-          </b-dropdown>
-          <b-form-input
-            v-else
-            v-model="transaction.category"
-            placeholder="Enter custom category name"
-            autocomplete="off"
-          ></b-form-input>
-        </b-form-group>
-
-        <b-form-group label="Amount" label-for="amount" class="mb-5">
-          <b-form-input
-            type="number"
-            v-model="transaction.amount"
-            @keydown="preventInvalidChars($event)"
-            id="amount"
-            placeholder="Enter amount"
-            autocomplete="off"
-          ></b-form-input>
-        </b-form-group>
-
-        <p
-          class="error"
-          v-if="
-            transaction.type === 'expense' &&
-              transaction.amount &&
-              +transaction.amount > balance
-          "
-        >
-          The amount is greater than your balance.
-        </p>
-
-        <div class="submit-btns">
-          <b-button
-            class="cancel"
-            variant="light"
-            @click="hideModal('add-modal')"
-            >Cancel</b-button
-          >
-          <b-button
-            :disabled="
-              transaction.category === '' ||
-                transaction.amount === '' ||
-                transaction.amount <= 0 ||
-                (transaction.type === 'expense' &&
-                  transaction.amount &&
-                  +transaction.amount > balance)
-            "
-            class="submit"
-            @click="handleSubmit"
-          >
-            Add
-            <b-spinner class="modal-spinner" v-if="actionLoading"></b-spinner>
-          </b-button>
-        </div>
-      </form>
-    </b-modal>
-
     <div class="content">
       <header>
         <div class="welcome">
@@ -173,7 +27,13 @@
           >
             <ul>
               <li>
-                <button class="btn-link" @click="hidePopover('user-ddown')">
+                <button
+                  class="btn-link"
+                  @click="
+                    hidePopover('user-ddown');
+                    openResetDataModal();
+                  "
+                >
                   <font-awesome-icon :icon="['fas', 'sync-alt']" />
                   <span>RESET DATA</span>
                 </button>
@@ -189,7 +49,13 @@
         </div>
       </header>
 
-      <body>
+      <div v-if="transactionLoading">
+        <center>
+          <b-spinner></b-spinner>
+        </center>
+      </div>
+
+      <body v-else>
         <section class="left">
           <h2>Summary</h2>
           <div class="left-content">
@@ -197,7 +63,7 @@
               <h4>BALANCE</h4>
               <span>
                 {{ currentUser.$$symbol }}
-                {{ balance.toLocaleString() }}
+                {{ transactions.$$balance.toLocaleString() }}
               </span>
             </div>
             <div class="summary">
@@ -205,7 +71,7 @@
                 <h4>TOTAL INCOME</h4>
                 <span>
                   {{ currentUser.$$symbol }}
-                  {{ income.toLocaleString() }}
+                  {{ transactions.$$income.toLocaleString() }}
                 </span>
               </div>
               <div class="divider"></div>
@@ -213,7 +79,7 @@
                 <h4>EXPENSE</h4>
                 <span>
                   {{ currentUser.$$symbol }}
-                  {{ expense.toLocaleString() }}
+                  {{ transactions.$$expense.toLocaleString() }}
                 </span>
               </div>
             </div>
@@ -222,30 +88,23 @@
         <section class="right">
           <div class="right-header">
             <h2>Transactions</h2>
-            <button v-b-modal.add-transaction>
+            <button @click="openAddTransactionModal">
               <font-awesome-icon class="icon" :icon="['fas', 'plus']" />
             </button>
           </div>
-          <div v-if="transactions.length < 1 && !transactionLoading">
+          <div v-if="transactions.data.length < 1 && !transactionLoading">
             <center>
               <h4>No Transactions Yet</h4>
             </center>
           </div>
 
-          <div v-if="transactionLoading">
-            <center>
-              <b-spinner></b-spinner>
-            </center>
-          </div>
-
           <div
             class="transaction"
-            v-for="(item, index) in transactions"
+            v-for="(item, index) in transactions.data"
             :key="index"
             :class="[item.type]"
             :id="`popover-1-${index}`"
           >
-            <!-- <b-button :id="`popover-1-${index}`" variant="primary">test</b-button> -->
             <div class="transaction-name">
               <div class="transaction-icon" :class="[item.icon]">
                 <font-awesome-icon class="icon" :icon="['fas', item.icon]" />
@@ -259,14 +118,16 @@
             <p>{{ currentUser.$$symbol }}{{ item.amount.toLocaleString() }}</p>
 
             <b-popover
-              v-if="item.amount < balance || expense === 0"
+              v-if="
+                item.amount < transactions.$$balance ||
+                  transactions.$$expense === 0
+              "
               :target="`popover-1-${index}`"
               :placement="isTabOrMobile ? 'top' : 'right'"
               triggers="hover focus"
             >
               <font-awesome-icon
                 @click="openDeleteModal(item)"
-                v-b-modal.delete-transaction
                 class="trash"
                 :icon="['fas', 'trash-alt']"
               />
@@ -278,114 +139,39 @@
         <h5>Personal Expense Tracker</h5>
       </footer>
     </div>
-    <b-modal
-      id="delete-transaction"
-      ref="delete-transaction"
-      title="Delete Transaction"
-      hide-footer
-    >
-      <h4 class="mb-5 mt-3">Are you sure you want to delete this?</h4>
 
-      <div class="submit-btns">
-        <b-button
-          class="cancel"
-          variant="light"
-          @click="hideModal('delete-transaction')"
-          >Cancel</b-button
-        >
-        <b-button class="submit" @click="handleDelete">
-          Delete
-          <b-spinner class="modal-spinner" v-if="actionLoading"></b-spinner>
-        </b-button>
-      </div>
-    </b-modal>
-
-    <b-modal ref="reset-data" title="Reset Data" id="reset-data" hide-footer>
-      <h4 class="my-4 mb-5">Are you sure you want reset your data?</h4>
-
-      <div class="submit-btns">
-        <b-button
-          class="cancel"
-          variant="light"
-          @click="hideModal('reset-modal')"
-          >Cancel</b-button
-        >
-        <b-button class="submit" @click="resetData">
-          Reset
-          <b-spinner class="modal-spinner" v-if="actionLoading"></b-spinner>
-        </b-button>
-      </div>
-    </b-modal>
-
-    <!-- <ResetDataModal ref="ResetDataModal" /> -->
+    <AddTransactionModal
+      ref="AddTransactionModal"
+      :currentUser="currentUser"
+      :transactions="transactions"
+    />
+    <DeleteTransactionModal
+      ref="DeleteTransactionModal"
+      :transaction="transactionToDelete"
+    />
+    <ResetDataModal ref="ResetDataModal" :currentUser="currentUser" />
   </div>
 </template>
 
 <script>
-// const axios = require('axios');
-// import moment from 'moment';
 import { mapGetters, mapActions } from 'vuex';
-// import TransactionService from '../service/TransactionService';
 import UserService from '../service/UserService';
-// import ResetDataModal from './modal/ResetDataModal';
+import AddTransactionModal from './modal/AddTransactionModal';
+import ResetDataModal from './modal/ResetDataModal';
+import DeleteTransactionModal from './modal/DeleteTransactionModal';
 
 export default {
   name: 'Overview',
   props: ['user'],
   computed: mapGetters(['transactions']),
+  components: { ResetDataModal, DeleteTransactionModal, AddTransactionModal },
   data() {
     return {
       ipDataKey: process.env.VUE_APP_IPDATAKEY,
-      customCategory: false,
       currentUser: JSON.parse(localStorage.getItem('user')) || {},
-      transaction: {
-        userId: '',
-        type: 'income',
-        category: '',
-        amount: '',
-        icon: ''
-      },
-      // transactions: [],
-      income: 0,
-      expense: 0,
-      balance: 0,
-      options: [],
-      incomeOptions: [
-        { value: 'salary', icon: 'wallet' },
-        { value: 'sales', icon: 'tags' },
-        { value: 'rewards', icon: 'hand-holding-usd' },
-        { value: 'lottery', icon: 'dice-four' },
-        { value: 'allowance', icon: 'money-bill-alt' },
-        { value: 'coupons', icon: 'receipt' },
-        { value: 'others', icon: 'random' }
-      ],
-      expenseOptions: [
-        { value: 'payment', icon: 'money-check' },
-        { value: 'car', icon: 'car' },
-        { value: 'food', icon: 'pizza-slice' },
-        { value: 'house', icon: 'home' },
-        { value: 'pets', icon: 'dog' },
-        { value: 'grocery', icon: 'shopping-cart' },
-        { value: 'coffee', icon: 'mug-hot' },
-        { value: 'travel', icon: 'plane' },
-        { value: 'investment', icon: 'chart-line' },
-        { value: 'alcohol', icon: 'beer' },
-        { value: 'personal', icon: 'user-tag' },
-        { value: 'shopping', icon: 'shopping-bag' },
-        { value: 'clothing', icon: 'tshirt' },
-        { value: 'medical', icon: 'briefcase-medical' },
-        { value: 'gifts', icon: 'gift' },
-        { value: 'insurance', icon: 'chart-bar' },
-        { value: 'gadgets', icon: 'mobile-alt' },
-        { value: 'loans', icon: 'credit-card' },
-        { value: 'education', icon: 'graduation-cap' },
-        { value: 'others', icon: 'random' }
-      ],
       transactionLoading: true,
-      actionLoading: false,
-      itemToDelete: null,
-      isTabOrMobile: false,
-      selectedCategory: null
+      transactionToDelete: null,
+      isTabOrMobile: false
     };
   },
   beforeRouteEnter(to, from, next) {
@@ -394,25 +180,15 @@ export default {
     else next();
   },
   created() {
-    // this.getCountry();
-    this.options = this.incomeOptions;
     this.isTabOrMobile = window.innerWidth < 768;
-
-    // this.country = JSON.parse(localStorage.getItem('country')) || [];
     this.getTransactions();
   },
   methods: {
-    ...mapActions([
-      'getAll',
-      'addTransaction',
-      'deleteTransaction',
-      'resetTransactions'
-    ]),
+    ...mapActions(['getAll']),
 
     getTransactions() {
       this.getAll(this.currentUser.id).then(
         () => {
-          this.getUserMoneyInformation();
           this.transactionLoading = false;
         },
         () => {
@@ -420,122 +196,30 @@ export default {
         }
       );
     },
-    getUserMoneyInformation() {
-      let income = 0;
-      let expense = 0;
-
-      if (this.transactions.length > 0) {
-        this.transactions.forEach(data => {
-          const amount = +data.amount;
-
-          if (data.type === 'income') {
-            income += amount;
-          } else {
-            expense += amount;
-          }
-
-          this.income = income;
-          this.balance = income - expense;
-          this.expense = expense;
-        });
-      } else {
-        this.income = this.expense = this.balance = 0;
-      }
+    openAddTransactionModal() {
+      this.$refs.AddTransactionModal.openModal();
     },
-    selectCategory(item) {
-      this.transaction.category = item.value;
-      this.selectedCategory = item;
-      this.$refs['category-ddown'].hide();
+    openDeleteModal(transaction) {
+      this.transactionToDelete = transaction;
+      this.$refs.DeleteTransactionModal.openModal();
     },
-    resetModals() {
-      this.$refs['delete-transaction'].hide();
-      this.$refs['add-modal'].hide();
-      this.$refs['reset-data'].hide();
-
-      this.transaction = {
-        type: 'income',
-        category: '',
-        amount: '',
-        icon: ''
-      };
-
-      this.transactionLoading = false;
-      this.options = this.incomeOptions;
-      this.selectedCategory = null;
-      this.customCategory = false;
-      this.actionLoading = false;
-    },
-    handleSubmit() {
-      this.actionLoading = true;
-
-      const item =
-        this.transaction.type === 'income' && this.customCategory
-          ? { icon: 'coins' }
-          : this.transaction.type === 'expense' && this.customCategory
-          ? { icon: 'money-bill' }
-          : this.options.find(icon => icon.value === this.transaction.category);
-
-      this.transaction.icon = item.icon;
-      this.transaction.userId = this.currentUser.id;
-
-      this.addTransaction(this.transaction).then(
-        () => {
-          this.updateUserModificationDate();
-          this.getUserMoneyInformation();
-          this.resetModals();
-        },
-        () => (this.actionLoading = false)
-      );
-    },
-    openDeleteModal(item) {
-      this.itemToDelete = item;
-    },
-    handleDelete() {
-      this.actionLoading = true;
-
-      this.deleteTransaction(this.itemToDelete._id).then(
-        () => {
-          this.updateUserModificationDate();
-          this.getUserMoneyInformation();
-          this.resetModals();
-        },
-        () => (this.actionLoading = false)
-      );
-    },
-    resetData() {
-      this.actionLoading = true;
-
-      this.resetTransactions(this.currentUser.id).then(
-        () => {
-          this.getUserMoneyInformation();
-          this.resetModals();
-        },
-        () => (this.actionLoading = false)
-      );
+    openResetDataModal() {
+      this.$refs.ResetDataModal.openModal();
     },
     updateUserModificationDate() {
-      UserService.update(this.currentUser.id).then(() => error =>
-        console.log(error)
+      UserService.update(this.currentUser.id).then(
+        response => {
+          console.log(response);
+        },
+        error => console.log(error)
       );
-    },
-    preventInvalidChars(evt) {
-      if (
-        (evt.which != 8 && evt.which != 0 && evt.which < 48) ||
-        evt.which > 57
-      ) {
-        evt.preventDefault();
-      }
     },
     signOut() {
       localStorage.clear();
       this.$router.push({ name: 'SignIn' });
     },
-    hideModal(modal) {
-      this.$refs[modal].hide();
-    },
     hidePopover(popover) {
       this.$refs[popover].$emit('close');
-      this.$refs['reset-data'].show();
     }
   }
 };
@@ -611,8 +295,6 @@ h4 {
 
       img {
         width: 65px;
-        // border: 3px solid #ffb129;
-        // border-radius: 50%;
         cursor: pointer;
 
         &:hover {
@@ -634,8 +316,6 @@ h4 {
   }
 
   body {
-    // @include flex(center, fle, column);
-    // height: 80vh;
     color: #ffffff;
     padding: 10px;
     border-radius: 15px;
@@ -663,10 +343,7 @@ h4 {
           width: 100%;
           @include flex(center, center, column);
           height: 80px;
-          // background: #ffffff;
           background: #01cc88;
-          // background: #ff2e63;
-          // font-size: 20px;
           font-weight: bold;
           border-top-left-radius: 10px;
           border-top-right-radius: 10px;
@@ -769,8 +446,6 @@ h4 {
         margin-bottom: 10px;
         box-shadow: 10px 10px 44px 0px rgba(0, 0, 0, 0.27);
         font-weight: bold;
-        // transition: .4s;
-        // cursor: pointer;
 
         &:hover {
           background: #f2f2f2;
@@ -804,46 +479,6 @@ h4 {
             font-size: 15px;
           }
         }
-
-        // .money-check {
-        //   background: #302387;
-        // }
-
-        // .car {
-        //   background: #323edd;
-        // }
-
-        // .pizza-slice {
-        //   background: #ffd31d;
-        // }
-
-        // .home {
-        //   background: #8105d8;
-        // }
-
-        // .dog {
-        //   background: #0fabbc;
-        // }
-
-        // .shopping-cart {
-        //   background: #e36387;
-        // }
-
-        // .mug-hot {
-        //   background: #df7861;
-        // }
-
-        // .map-marker-alt {
-        //   background: #3e64ff;
-        // }
-
-        // .coins {
-        //   background: #01cc88;
-        // }
-
-        // .money-bill {
-        //   background: #fa163f;
-        // }
       }
     }
   }
@@ -856,45 +491,6 @@ h4 {
       color: #999999;
     }
   }
-}
-
-.tooltip-btn {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0;
-  border: 0;
-
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: transparent !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-  }
-
-  .pencil {
-    margin: 0 0 1px 5px;
-    color: #ff2e63;
-    font-size: 14px;
-    cursor: pointer;
-  }
-}
-
-.radio-btns {
-  display: flex;
-
-  .custom-control {
-    margin-right: 10px;
-  }
-}
-
-.reminder {
-  margin-top: 10px;
-  color: #ff2e63;
-  font-size: 14px;
-  font-weight: bold;
 }
 
 @media (min-width: 768px) {

@@ -1,21 +1,13 @@
 <template>
-  <b-modal
-    id="delete-transaction"
-    ref="delete-transaction"
-    title="Delete Transaction"
-    hide-footer
-  >
-    <h5 class="mb-5 mt-3">Are you sure you want to delete this?</h5>
+  <b-modal ref="reset-data" title="Reset Data" id="reset-data" hide-footer>
+    <h5 class="my-4 mb-5">Are you sure you want reset your data?</h5>
 
     <div class="submit-btns">
-      <b-button
-        class="cancel"
-        variant="light"
-        @click="hideModal('delete-transaction')"
+      <b-button class="cancel" variant="light" @click="hideModal"
         >Cancel</b-button
       >
-      <b-button class="submit" @click="handleDelete">
-        Delete
+      <b-button class="submit" @click="resetData">
+        Reset
         <b-spinner class="modal-spinner" v-if="actionLoading"></b-spinner>
       </b-button>
     </div>
@@ -26,26 +18,25 @@
 import { mapActions } from 'vuex';
 
 export default {
-  name: 'DeleteTransactionModal',
-  props: ['transaction'],
+  name: 'ResetDataModal',
+  props: ['currentUser'],
   data() {
     return {
       actionLoading: false
     };
   },
   methods: {
-    ...mapActions(['deleteTransaction']),
+    ...mapActions(['resetTransactions']),
     openModal() {
-      this.$refs['delete-transaction'].show();
+      this.$refs['reset-data'].show();
     },
     hideModal() {
-      this.$refs['delete-transaction'].hide();
+      this.$refs['reset-data'].hide();
     },
-
-    handleDelete() {
+    resetData() {
       this.actionLoading = true;
 
-      this.deleteTransaction(this.transaction._id).then(
+      this.resetTransactions(this.currentUser.id).then(
         () => {
           this.hideModal();
           this.actionLoading = false;
