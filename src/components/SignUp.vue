@@ -87,7 +87,7 @@ export default {
       user: {
         name: '',
         passcode: '',
-        avatar: '',
+        avatar: ''
       },
       errorMessage: '',
       loading: false,
@@ -107,10 +107,10 @@ export default {
         '013-girl',
         '014-bell-boy',
         '015-girl',
-        '016-punk',
+        '016-punk'
       ],
       showPopover: false,
-      selectedAvatar: '',
+      selectedAvatar: ''
     };
   },
   created() {},
@@ -130,13 +130,13 @@ export default {
             params: {
               userFromSignUp: {
                 name: this.user.name,
-                passcode: this.user.passcode,
-              },
-            },
+                passcode: this.user.passcode
+              }
+            }
           });
           this.loading = false;
         },
-        (error) => {
+        error => {
           this.errorMessage = error.response.data;
           this.loading = false;
         }
@@ -156,17 +156,18 @@ export default {
       ) {
         evt.preventDefault();
       }
-    },
-  },
+    }
+  }
 };
 </script>
 
 <style lang="scss" scoped>
-@import '../assets/styles/main.scss';
-
 .sign-in-up {
   .avatar {
-    @include flex(center, center, column);
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 30px;
 
     .circle {
@@ -175,7 +176,9 @@ export default {
       background: #ffb129;
       color: #ffffff;
       border-radius: 50%;
-      @include flex(center, center, column);
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
       cursor: pointer;
 

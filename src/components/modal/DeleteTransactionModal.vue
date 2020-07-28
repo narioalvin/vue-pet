@@ -57,6 +57,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-@import '../../assets/styles/main.css';
-</style>
+<style lang="scss" scoped></style>

@@ -55,10 +55,10 @@ export default {
       ipDataKey: process.env.VUE_APP_IPDATAKEY,
       user: {
         name: '',
-        passcode: '',
+        passcode: ''
       },
       errorMessage: '',
-      loading: false,
+      loading: false
     };
   },
   created() {
@@ -77,11 +77,11 @@ export default {
 
       axios
         .get(`https://api.ipdata.co?api-key=${this.ipDataKey}`)
-        .then((response) => {
+        .then(response => {
           const country = response.data;
 
           UserService.signin(this.user).then(
-            (response) => {
+            response => {
               const user = response.data;
 
               user['$$symbol'] = country.currency.symbol;
@@ -91,17 +91,17 @@ export default {
 
               this.$router.push({
                 name: 'Overview',
-                params: { user: user },
+                params: { user: user }
               });
               this.loading = false;
             },
-            (error) => {
+            error => {
               this.errorMessage = error.response.data;
               this.loading = false;
             }
           );
         })
-        .catch((error) => console.log(error));
+        .catch(error => console.log(error));
     },
     directToSignUp() {
       const element = document.querySelector('.content');
@@ -118,14 +118,12 @@ export default {
       ) {
         evt.preventDefault();
       }
-    },
-  },
+    }
+  }
 };
 </script>
 
 <style lang="scss" scoped>
-@import '../assets/styles/main.scss';
-
 .sign-in-up .content .logo {
   text-align: center;
   margin-bottom: 30px;
@@ -133,11 +131,5 @@ export default {
   img {
     margin-bottom: 20px;
   }
-
-  // h5 {
-  //   color: #010a43;
-  //   font-weight: bold;
-  //   font-size: 17px;
-  // }
 }
 </style>

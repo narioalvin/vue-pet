@@ -258,8 +258,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/styles/main.css';
-
 .tooltip-btn {
   background: transparent;
   border: 0;
