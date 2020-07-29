@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div class="content">
-      <header>
+      <header v-if="currentUser.name !== undefined">
         <div class="welcome">
           <div class="name">
             <h1>{{ currentUser.name }}</h1>
@@ -49,7 +49,7 @@
         </div>
       </header>
 
-      <div v-if="transactionLoading">
+      <div class="mt-5" v-if="transactionLoading">
         <center>
           <b-spinner></b-spinner>
         </center>
@@ -148,6 +148,7 @@
     <DeleteTransactionModal
       ref="DeleteTransactionModal"
       :transaction="transactionToDelete"
+      :currentUser="currentUser"
     />
     <ResetDataModal ref="ResetDataModal" :currentUser="currentUser" />
   </div>
@@ -155,23 +156,21 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
-import UserService from '../service/UserService';
 import AddTransactionModal from './modal/AddTransactionModal';
 import ResetDataModal from './modal/ResetDataModal';
 import DeleteTransactionModal from './modal/DeleteTransactionModal';
 
 export default {
   name: 'Overview',
-  props: ['user'],
   computed: mapGetters(['transactions']),
   components: { ResetDataModal, DeleteTransactionModal, AddTransactionModal },
   data() {
     return {
       ipDataKey: process.env.VUE_APP_IPDATAKEY,
-      currentUser: JSON.parse(localStorage.getItem('user')) || {},
       transactionLoading: true,
       transactionToDelete: null,
-      isTabOrMobile: false
+      isTabOrMobile: false,
+      currentUser: JSON.parse(localStorage.getItem('user')) || {}
     };
   },
   beforeRouteEnter(to, from, next) {
@@ -205,14 +204,6 @@ export default {
     },
     openResetDataModal() {
       this.$refs.ResetDataModal.openModal();
-    },
-    updateUserModificationDate() {
-      UserService.update(this.currentUser.id).then(
-        response => {
-          console.log(response);
-        },
-        error => console.log(error)
-      );
     },
     signOut() {
       localStorage.clear();

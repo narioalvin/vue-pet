@@ -69,7 +69,7 @@
       </div>
 
       <p class="error" v-if="errorMessage !== ''">{{ errorMessage }}</p>
-      <button @click="signUp" class="proceed-btn">
+      <button @click="handleSignUp" class="proceed-btn">
         REGISTER
         <b-spinner v-if="loading" class="action-spinner"></b-spinner>
       </button>
@@ -78,7 +78,7 @@
 </template>
 
 <script>
-import UserService from '../service/UserService';
+import { mapActions } from 'vuex';
 
 export default {
   name: 'SignUp',
@@ -119,11 +119,12 @@ export default {
     element.style['-webkit-animation'] = 'animLeft .5s';
   },
   methods: {
-    signUp() {
+    ...mapActions(['signUp']),
+    handleSignUp() {
       this.loading = true;
       this.errorMessage = '';
 
-      UserService.signup(this.user).then(
+      this.signUp(this.user).then(
         () => {
           this.$router.push({
             name: 'SignIn',

@@ -34,7 +34,7 @@
       </div>
 
       <p class="error" v-if="errorMessage !== ''">{{ errorMessage }}</p>
-      <button @click="signIn" class="proceed-btn">
+      <button @click="handleSignIn" class="proceed-btn">
         SIGN IN
         <b-spinner class="action-spinner" v-if="loading"></b-spinner>
       </button>
@@ -43,9 +43,7 @@
 </template>
 
 <script>
-const axios = require('axios');
-import UserService from '../service/UserService';
-import moment from 'moment';
+import { mapActions } from 'vuex';
 
 export default {
   name: 'SignIn',
@@ -71,42 +69,28 @@ export default {
     element.style['-webkit-animation'] = 'animLeft .5s';
   },
   methods: {
-    signIn() {
+    ...mapActions(['signIn']),
+    handleSignIn() {
       this.loading = true;
       this.errorMessage = '';
 
-      axios
-        .get(`https://api.ipdata.co?api-key=${this.ipDataKey}`)
-        .then(response => {
-          const country = response.data;
-
-          UserService.signin(this.user).then(
-            response => {
-              const user = response.data;
-
-              user['$$symbol'] = country.currency.symbol;
-              user.modificationDate = moment().calendar();
-
-              localStorage.setItem('user', JSON.stringify(user));
-
-              this.$router.push({
-                name: 'Overview',
-                params: { user: user }
-              });
-              this.loading = false;
-            },
-            error => {
-              this.errorMessage = error.response.data;
-              this.loading = false;
-            }
-          );
-        })
-        .catch(error => console.log(error));
+      this.signIn(this.user).then(
+        () => {
+          this.$router.push({
+            name: 'Overview'
+          });
+          this.loading = false;
+        },
+        error => {
+          this.errorMessage = error.response.data;
+          this.loading = false;
+        }
+      );
     },
     directToSignUp() {
       const element = document.querySelector('.content');
       element.style['-webkit-animation'] = 'animRight .5s forwards';
-      // this.$router.push({ name: 'SignUp' });
+
       setTimeout(() => {
         this.$router.push({ name: 'SignUp' });
       }, 90);
