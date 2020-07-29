@@ -124,7 +124,8 @@
         >
         <b-button
           :disabled="
-            transaction.category === '' ||
+            (selectedCategory === null && !customCategory) ||
+              transaction.category === '' ||
               transaction.amount === '' ||
               transaction.amount <= 0 ||
               (transaction.type === 'expense' &&
@@ -199,7 +200,7 @@ export default {
     this.options = this.incomeOptions;
   },
   methods: {
-    ...mapActions(['addTransaction']),
+    ...mapActions(['addTransaction', 'updateUser']),
     openModal() {
       this.$refs['add-transaction'].show();
     },
@@ -226,8 +227,9 @@ export default {
 
       this.addTransaction(this.transaction).then(
         () => {
-          this.hideModal();
+          this.updateUser(this.currentUser.id);
           this.resetInputs();
+          this.hideModal();
         },
         () => (this.actionLoading = false)
       );

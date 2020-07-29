@@ -98,10 +98,7 @@ $main: #010a43;
 
       div {
         width: 59px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        @include flex(center, space-evenly, column);
         text-transform: capitalize;
         margin: 5px;
         cursor: pointer;
@@ -118,9 +115,7 @@ $main: #010a43;
           text-align: center;
           border-radius: 50%;
           color: #ffffff;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+          @include flex(center, space-evenly, row);
         }
 
         svg {
@@ -132,18 +127,6 @@ $main: #010a43;
     .dropdown-item {
       text-transform: capitalize;
       display: flex;
-
-      .dd-icons {
-        width: 26px;
-        height: 26px;
-        text-align: center;
-        border-radius: 50%;
-        color: #ffffff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-right: 10px;
-      }
 
       svg {
         font-size: 12px;

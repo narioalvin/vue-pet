@@ -27,14 +27,15 @@ import { mapActions } from 'vuex';
 
 export default {
   name: 'DeleteTransactionModal',
-  props: ['transaction'],
+  props: ['transaction', 'currentUser'],
   data() {
     return {
       actionLoading: false
     };
   },
   methods: {
-    ...mapActions(['deleteTransaction']),
+    ...mapActions(['deleteTransaction', 'updateUser']),
+
     openModal() {
       this.$refs['delete-transaction'].show();
     },
@@ -47,8 +48,8 @@ export default {
 
       this.deleteTransaction(this.transaction._id).then(
         () => {
+          this.updateUser(this.currentUser.id);
           this.hideModal();
-          this.actionLoading = false;
         },
         () => (this.actionLoading = false)
       );

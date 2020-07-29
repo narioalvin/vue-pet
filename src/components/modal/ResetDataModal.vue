@@ -26,7 +26,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['resetTransactions']),
+    ...mapActions(['resetTransactions', 'updateUser']),
     openModal() {
       this.$refs['reset-data'].show();
     },
@@ -38,8 +38,8 @@ export default {
 
       this.resetTransactions(this.currentUser.id).then(
         () => {
+          this.updateUser(this.currentUser.id);
           this.hideModal();
-          this.actionLoading = false;
         },
         () => (this.actionLoading = false)
       );
@@ -48,5 +48,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
