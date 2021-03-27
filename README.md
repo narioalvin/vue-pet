@@ -1,8 +1,15 @@
 # Personal Expense Tracker
+A Personal Expense Tracker Web Application that allows you to monitor your spending pattern. Created using Vue for Front-End, Node.js for Back-End, and MongoDB for Database.
 
 ## Live
 
 [Click Me](https://narioalvin.github.io/vue-personal-expense-tracker/)
+
+### Requirements
+1. npm
+2. Express API https://github.com/narioalvin/personal-expense-tracker-api
+3. MongoDB database
+4. https://ipdata.co/ API Key
 
 ## Project setup
 
